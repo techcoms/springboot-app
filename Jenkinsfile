@@ -1,42 +1,57 @@
-pipeline{
-     options {
-    buildDiscarder(logRotator(numToKeepStr: '2', artifactNumToKeepStr: '6'))
-  }
+pipeline {
     agent any
-     environment {
-        DOCKERHUB_REPO = "techcoms/backend-springboot-maven-jar"
-     }
-    tools{
-        maven "maven3.9.1"
+
+    tools {
+        maven 'mvn'
     }
-     stages{
-        stage("git checkout"){
-           steps{
-                  git branch: "main", url: "https://github.com/techcoms/springboot-app.git"
-            }
-        } 
-        stage("build artifacts with maven"){
-            steps{
-                sh "mvn clean package"
-            }
-        }
-        stage('build docker image'){
-            steps{
-                sh "docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} ."
+
+    environment {
+        SONAR_HOST_URL = 'http://3.27.78.81:9000'
+        SONAR_AUTH_TOKEN = credentials('sonarqube')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/AnushaAkkena/POC3.git', branch: 'feature3'
             }
         }
-         stage('run a docker container'){
-                steps{
-                   sh "docker run -d -p 8181:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
-                }
-         }
-        stage("login to dockerhub and push image"){
-            steps { 
-                withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
-                    sh "docker login -u $USERNAME -p $PASSWORD "
-                    sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
-                  }
-              }
-         }  
-     }
-}   
+
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                sh '''
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=spring-boot-demo \
+                      -Dsonar.host.url=$SONAR_HOST_URL \
+                      -Dsonar.login=$SONAR_AUTH_TOKEN
+                '''
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t firstsonarproject:latest .'
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                sh '''
+                    docker run -d --name mysonarqubeapp -p 81:8080 firstsonarproject:latest
+                '''
+            }
+        }
+    }
+}
