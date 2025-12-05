@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/AnushaAkkena/POC3.git', branch: 'feature3'
+                git url: 'https://github.com/techcoms/springboot-app', branch: 'feature3'
             }
         }
 
