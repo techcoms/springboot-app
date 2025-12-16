@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     tools {
-        maven 'mvn'
+        maven 'maven-3.9.11'
     }
 
     environment {
-        SONAR_HOST_URL = 'http://3.27.78.81:9000'
-        SONAR_AUTH_TOKEN = credentials('sonarqube')
+        SONAR_HOST_URL = 'http://13.204.90.126:9000'
+        SONAR_AUTH_TOKEN = credentials('sonar-token')
     }
 
     stages {
