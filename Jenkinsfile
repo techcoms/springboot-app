@@ -40,12 +40,19 @@ pipeline {
             }
         }
         stage('OWASP Dependency Check') {
+            environment {
+                NVD_API_KEY = credentials('nvd-api-key')
+            }
             steps {
-                sh 'mvn clean verify'
+                sh '''
+                mvn org.owasp:dependency-check-maven:9.0.9:check \
+                  -Dnvd.api.key=$NVD_API_KEY
+                '''
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'target/dependency-check-report.*', fingerprint: true
+                    archiveArtifacts artifacts: 'target/dependency-check-report.*',
+                                     fingerprint: true
                 }
             }
         }
