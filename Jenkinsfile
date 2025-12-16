@@ -39,6 +39,16 @@ pipeline {
                 '''
             }
         }
+        stage('OWASP Dependency Check') {
+            steps {
+                sh 'mvn dependency-check:check'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'target/dependency-check-report.*', fingerprint: true
+                }
+            }
+        }
 
         stage('Docker Build') {
             steps {
