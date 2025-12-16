@@ -41,7 +41,7 @@ pipeline {
         }
         stage('OWASP Dependency Check') {
             steps {
-                sh 'mvn dependency-check:check'
+                sh 'mvn clean verify'
             }
             post {
                 always {
