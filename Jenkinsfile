@@ -45,9 +45,11 @@ pipeline {
             }
             steps {
                 sh '''
-                mvn org.owasp:dependency-check-maven:9.0.9:check \
-                  -Dnvd.api.key=$NVD_API_KEY
-                '''
+                    mvn org.owasp:dependency-check-maven:9.0.9:check \
+                   -Dnvd.api.key=$NVD_API_KEY \
+                   -Dnvd.api.delay=3000 \
+                   -Dnvd.api.maxRetryCount=10
+              '''
             }
             post {
                 always {
