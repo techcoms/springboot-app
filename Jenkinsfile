@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        SONAR_HOST_URL = 'http://13.204.90.126:9000'
+        SONAR_HOST_URL = 'http://13.235.62.16:9000/'
         SONAR_AUTH_TOKEN = credentials('sonar-token')
     }
 
