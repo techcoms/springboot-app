@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         SONAR_HOST_URL = 'http://13.235.62.16:9000'
+        DOCKERHUB_REPO = "techcoms/backend-springboot-maven-jar"
     }
 
     stages {
@@ -37,27 +38,55 @@ pipeline {
                 }
             }
         }
-         stage('OWASP Dependency Check') {
-            steps {
-               dependencyCheck additionalArguments: '''
-                   --scan .
-                   --format HTML
-                   --format XML
-                  --out target
-               ''',
-              odcInstallation: 'OWASP-Dependency-Check'
+
+        stage('OWASP Dependency Check') {
+            environment {
+                NVD_API_KEY = credentials('nvd-api-key')
             }
-              post {
+            steps {
+                sh """
+                    mvn org.owasp:dependency-check-maven:9.0.9:check \
+                      -Dnvd.api.key=\${NVD_API_KEY} \
+                      -Dnvd.api.delay=6000 \
+                      -Dnvd.api.maxRetryCount=15 \
+                      -DautoUpdate=false \
+                      -DfailOnError=false
+                """
+            }
+            post {
                 always {
-                     dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-                     archiveArtifacts artifacts: 'target/dependency-check-report.html', fingerprint: true
-               }
-           }   
-       }
+                    script {
+                        if (fileExists('target/dependency-check-report.html')) {
+                            archiveArtifacts artifacts: 'target/dependency-check-report.html',
+                                             fingerprint: true
+                        } else {
+                            echo 'Dependency-Check report not generated'
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t firstsonarproject:latest .'
+                sh 'docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} .'
+            }
+        }
+        stage("login to dockerhub and push image"){
+            steps { 
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
+                    sh "docker login -u $USERNAME -p $PASSWORD "
+                    sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+                  }
+              }
+            stage('Trivy Image Scan') {
+            steps {
+                sh """
+                  trivy image \
+                    --severity HIGH,CRITICAL \
+                    --no-progress \
+                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+                """
             }
         }
 
