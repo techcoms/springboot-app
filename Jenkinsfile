@@ -37,34 +37,23 @@ pipeline {
                 }
             }
         }
-
-        stage('OWASP Dependency Check') {
-            environment {
-                NVD_API_KEY = credentials('nvd-api-key')
-            }
+         stage('OWASP Dependency Check') {
             steps {
-                sh """
-                    mvn org.owasp:dependency-check-maven:9.0.9:check \
-                      -Dnvd.api.key=\${NVD_API_KEY} \
-                      -Dnvd.api.delay=6000 \
-                      -Dnvd.api.maxRetryCount=15 \
-                      -DautoUpdate=false \
-                      -DfailOnError=false
-                """
+               dependencyCheck additionalArguments: '''
+                   --scan .
+                   --format HTML
+                   --format XML
+                  --out target
+               ''',
+              odcInstallation: 'OWASP-Dependency-Check'
             }
-            post {
+              post {
                 always {
-                    script {
-                        if (fileExists('target/dependency-check-report.html')) {
-                            archiveArtifacts artifacts: 'target/dependency-check-report.html',
-                                             fingerprint: true
-                        } else {
-                            echo 'Dependency-Check report not generated'
-                        }
-                    }
-                }
-            }
-        }
+                     dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+                     archiveArtifacts artifacts: 'target/dependency-check-report.html', fingerprint: true
+               }
+           }   
+       }
 
         stage('Docker Build') {
             steps {
