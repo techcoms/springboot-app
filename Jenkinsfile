@@ -27,12 +27,14 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                // Removed withCredentials as you enabled anonymous access
-                sh """
-                    mvn sonar:sonar \
-                      -Dsonar.projectKey=spring-boot-demo \
-                      -Dsonar.host.url=${SONAR_HOST_URL}
-                """
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh """
+                        mvn sonar:sonar \
+                          -Dsonar.projectKey=spring-boot-demo \
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.login=\${SONAR_AUTH_TOKEN}
+                    """
+                }
             }
         }
 
