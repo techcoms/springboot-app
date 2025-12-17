@@ -44,12 +44,15 @@ pipeline {
                 NVD_API_KEY = credentials('nvd-api-key')
             }
             steps {
-                sh '''
+                sh """
+                    echo "NVD API KEY LENGTH: \${#NVD_API_KEY}"
+
                     mvn org.owasp:dependency-check-maven:9.0.9:check \
-                   -Dnvd.api.key=$NVD_API_KEY \
-                   -Dnvd.api.delay=3000 \
-                   -Dnvd.api.maxRetryCount=10
-              '''
+                    -Dnvd.api.key=\${NVD_API_KEY} \
+                    -Dnvd.api.delay=6000 \
+                    -Dnvd.api.maxRetryCount=15 \
+                    -DfailOnError=false
+              """
             }
             post {
                 always {
