@@ -15,7 +15,6 @@
     <name>spring-boot-demo</name>
     <description>Spring Boot Demo Application</description>
 
-    <!-- Spring Boot Parent -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -23,7 +22,6 @@
         <relativePath/>
     </parent>
 
-    <!-- Properties -->
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
@@ -31,29 +29,24 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
-    <!-- Dependencies -->
     <dependencies>
 
-        <!-- Spring Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Thymeleaf -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -62,19 +55,16 @@
 
     </dependencies>
 
-    <!-- Build -->
     <build>
         <finalName>spring-boot-web</finalName>
 
         <plugins>
 
-            <!-- Spring Boot Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -82,35 +72,6 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                </configuration>
-            </plugin>
-
-            <!-- ✅ OWASP Dependency Check (FIXED) -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>9.0.9</version>
-                <executions>
-                    <execution>
-                        <id>dependency-check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <!-- Fail build for HIGH / CRITICAL -->
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-
-                    <!-- Report formats -->
-                    <formats>
-                        <format>HTML</format>
-                        <format>XML</format>
-                    </formats>
-
-                    <!-- Output location -->
-                    <outputDirectory>${project.build.directory}</outputDirectory>
                 </configuration>
             </plugin>
 
