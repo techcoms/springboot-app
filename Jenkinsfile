@@ -83,10 +83,7 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                // Added a stop/rm command to prevent "Port already in use" errors on repeat runs
                 sh """
-                    docker stop spring-app || true
-                    docker rm spring-app || true
                     docker run -d --name spring-app -p 8181:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}
                 """
             }
