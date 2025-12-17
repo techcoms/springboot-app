@@ -56,9 +56,14 @@ pipeline {
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'target/dependency-check-report.*',
-                                     fingerprint: true
-                }
+                    script {
+                       if (fileExists('target/dependency-check-report.html')) {
+                            archiveArtifacts artifacts: 'target/dependency-check-report.html',
+                                          fingerprint: true
+                       } else {
+                            echo 'Dependency-Check report not generated'
+                   }
+               }
             }
         }
 
