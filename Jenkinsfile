@@ -42,29 +42,30 @@ pipeline {
             environment {
                 NVD_API_KEY = credentials('nvd-api-key')
             }
-            steps {
-                sh """
-                    mvn org.owasp:dependency-check-maven:9.0.9:check \
-                      -Dnvd.api.key=${NVD_API_KEY} \
-                      -Dnvd.api.delay=6000 \
-                      -Dnvd.api.maxRetryCount=15 \
-                      -DautoUpdate=false \
-                      -DfailOnError=false
-                """
-            }
-            post {
-                always {
-                    script {
-                        if (fileExists('target/dependency-check-report.html')) {
-                            archiveArtifacts artifacts: 'target/dependency-check-report.html',
-                                             fingerprint: true
-                        } else {
-                            echo 'Dependency-Check report not generated'
-                        }
-                    }
-                }
-            }
-        }
+             steps {
+                dependencyCheck additionalArguments: """
+                 --scan .
+                 --format HTML
+                 --format XML
+                 --out target
+                 --nvdApiKey ${env.NVD_API_KEY}
+              """,
+            odcInstallation: 'DC'
+
+            // Publish Dependency-Check XML report to Jenkins
+            dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+    
+       post {
+          always {
+              // Archive reports (do not fail build if missing)
+                 archiveArtifacts artifacts: '''
+                target/dependency-check-report.html,
+                target/dependency-check-report.xml
+               ''',
+                 allowEmptyArchive: true
+          }
+       }
+     }
 
         stage('Docker Build') {
             steps {
