@@ -27,14 +27,12 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKEN')]) {
-                    sh """
-                        mvn sonar:sonar \
-                          -Dsonar.projectKey=spring-boot-demo \
-                          -Dsonar.host.url=${SONAR_HOST_URL} \
-                          -Dsonar.login=${SONAR_AUTH_TOKEN}
-                    """
-                }
+                // Removed withCredentials as you enabled anonymous access
+                sh """
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=spring-boot-demo \
+                      -Dsonar.host.url=${SONAR_HOST_URL}
+                """
             }
         }
 
@@ -42,30 +40,25 @@ pipeline {
             environment {
                 NVD_API_KEY = credentials('nvd-api-key')
             }
-             steps {
+            steps {
+                // Using the specialized DSL for the Dependency Check Plugin
                 dependencyCheck additionalArguments: """
-                 --scan .
-                 --format HTML
-                 --format XML
-                 --out target
-                 --nvdApiKey ${env.NVD_API_KEY}
-              """,
-            odcInstallation: 'DC'
-
-            // Publish Dependency-Check XML report to Jenkins
-            dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-    
-       post {
-          always {
-              // Archive reports (do not fail build if missing)
-                 archiveArtifacts artifacts: '''
-                target/dependency-check-report.html,
-                target/dependency-check-report.xml
-               ''',
-                 allowEmptyArchive: true
-          }
-       }
-     }
+                    --scan .
+                    --format HTML
+                    --format XML
+                    --out target
+                    --nvdApiKey ${NVD_API_KEY}
+                """, odcInstallation: 'DC'
+                
+                dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'target/dependency-check-report.html, target/dependency-check-report.xml',
+                                     allowEmptyArchive: true
+                }
+            }
+        }
 
         stage('Docker Build') {
             steps {
@@ -75,7 +68,6 @@ pipeline {
 
         stage('Trivy Image Scan') {
             steps {
-                // Scans the local image created in the previous stage
                 sh """
                     trivy image \
                       --severity HIGH,CRITICAL \
@@ -96,8 +88,12 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                // Use --rm or a specific name to avoid container name conflicts on re-runs
-                sh "docker run -d -p 8181:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+                // Added a stop/rm command to prevent "Port already in use" errors on repeat runs
+                sh """
+                    docker stop spring-app || true
+                    docker rm spring-app || true
+                    docker run -d --name spring-app -p 8181:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                """
             }
         }
     }
