@@ -44,14 +44,7 @@ pipeline {
             }
             steps {
                 // Using the specialized DSL for the Dependency Check Plugin
-                dependencyCheck additionalArguments: """
-                    --scan .
-                    --format HTML
-                    --format XML
-                    --out target
-                    --nvdApiKey ${NVD_API_KEY}
-                """, odcInstallation: 'DC'
-                
+                dependencyCheck additionalArguments: "--scan . --format HTML --nvdApiKey ${env.NVD_API_KEY}", odcInstallation: 'DC'
                 dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
             }
             post {
